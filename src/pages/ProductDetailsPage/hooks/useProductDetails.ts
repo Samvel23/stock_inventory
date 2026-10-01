@@ -8,11 +8,13 @@ import { mergeProductChanges } from "@/utils/products/mergeProductChanges";
 
 import type { IProduct } from "@/types/products";
 
+interface IFetchedProductState {
+  productId: number | null;
+  product: IProduct | null;
+  error: boolean;
+}
+
 export const useProductDetails = (id?: string) => {
-  const [fetchedProduct, setFetchedProduct] = useState<IProduct | null>(null);
-
-  const [fetchError, setFetchError] = useState(false);
-
   const productChanges = useProductChangesStore(
     (state) => state.productChanges,
   );
@@ -45,14 +47,16 @@ export const useProductDetails = (id?: string) => {
 
   const shouldFetch = isValidProductId && !isDeleted && !localProduct;
 
-  const [loading, setLoading] = useState(shouldFetch);
+  const [fetchedState, setFetchedState] = useState<IFetchedProductState>(
+    () => ({
+      productId: shouldFetch ? productId : null,
+      product: null,
+      error: false,
+    }),
+  );
 
   useEffect(() => {
     if (!shouldFetch) {
-      setLoading(false);
-      setFetchedProduct(null);
-      setFetchError(false);
-
       return;
     }
 
@@ -60,9 +64,6 @@ export const useProductDetails = (id?: string) => {
 
     const fetchProduct = async () => {
       try {
-        setLoading(true);
-        setFetchError(false);
-
         const response = await getProduct({
           id: productId,
           signal: controller.signal,
@@ -72,7 +73,11 @@ export const useProductDetails = (id?: string) => {
           return;
         }
 
-        setFetchedProduct(response.data);
+        setFetchedState({
+          productId,
+          product: response.data,
+          error: false,
+        });
       } catch (error) {
         if (controller.signal.aborted) {
           return;
@@ -80,21 +85,28 @@ export const useProductDetails = (id?: string) => {
 
         console.error("Error getting product", error);
 
-        setFetchedProduct(null);
-        setFetchError(true);
-      } finally {
-        if (!controller.signal.aborted) {
-          setLoading(false);
-        }
+        setFetchedState({
+          productId,
+          product: null,
+          error: true,
+        });
       }
     };
 
-    fetchProduct();
+    void fetchProduct();
 
     return () => {
       controller.abort();
     };
   }, [productId, shouldFetch]);
+
+  const hasCurrentFetchedProduct =
+    fetchedState.productId === productId && fetchedState.product !== null;
+
+  const hasCurrentFetchError =
+    fetchedState.productId === productId && fetchedState.error;
+
+  const fetchedProduct = hasCurrentFetchedProduct ? fetchedState.product : null;
 
   const product = localProduct ?? fetchedProduct;
 
@@ -102,15 +114,20 @@ export const useProductDetails = (id?: string) => {
     ? mergeProductChanges(product, productChanges[product.id] ?? {})
     : null;
 
+  const loading =
+    shouldFetch &&
+    fetchedState.productId !== productId &&
+    !hasCurrentFetchError;
+
   const error =
     !isValidProductId ||
     isDeleted ||
-    (!localProduct && !fetchedProduct && fetchError);
+    (!localProduct && !fetchedProduct && hasCurrentFetchError);
 
   return {
     product,
     effectiveProduct,
-    loading: shouldFetch && !fetchedProduct ? loading : false,
+    loading,
     error,
   };
 };

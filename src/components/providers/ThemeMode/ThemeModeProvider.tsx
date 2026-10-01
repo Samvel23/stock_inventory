@@ -33,15 +33,11 @@ const getInitialMode = (): TThemeMode => {
   return themeModes.system;
 };
 
-const getSystemMode = (): TResolvedThemeMode => {
-  return window.matchMedia("(prefers-color-scheme: dark)").matches
-    ? "dark"
-    : "light";
-};
+const getSystemMode = (): TResolvedThemeMode =>
+  window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 
 export const ThemeModeProvider = ({ children }: IThemeModeProviderProps) => {
   const [mode, setMode] = useState<TThemeMode>(getInitialMode);
-
   const [systemMode, setSystemMode] =
     useState<TResolvedThemeMode>(getSystemMode);
 
@@ -51,8 +47,6 @@ export const ThemeModeProvider = ({ children }: IThemeModeProviderProps) => {
     const handleSystemModeChange = (event: MediaQueryListEvent) => {
       setSystemMode(event.matches ? "dark" : "light");
     };
-
-    setSystemMode(mediaQuery.matches ? "dark" : "light");
 
     mediaQuery.addEventListener("change", handleSystemModeChange);
 
@@ -71,7 +65,6 @@ export const ThemeModeProvider = ({ children }: IThemeModeProviderProps) => {
 
   const changeMode = useCallback((nextMode: TThemeMode) => {
     localStorage.setItem(THEME_MODE_KEY, nextMode);
-
     setMode(nextMode);
   }, []);
 

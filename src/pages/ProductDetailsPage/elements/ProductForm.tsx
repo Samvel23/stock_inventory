@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 import {
   Box,
+  Stack,
   Button,
   MenuItem,
-  Stack,
   TextField,
   Typography,
 } from "@mui/material";
@@ -42,10 +42,10 @@ const createInitialValues = (product?: IProduct): IProductFormValues => ({
   imageUrl: product?.thumbnail ?? "",
 });
 
-export const ProductForm = ({
+const ProductFormFields = ({
   product,
   categories,
-  loading = false,
+  loading,
   onSubmit,
 }: IProductFormProps) => {
   const { t } = useTranslation();
@@ -57,11 +57,6 @@ export const ProductForm = ({
   const [errors, setErrors] = useState<
     Partial<Record<keyof IProductFormValues, string>>
   >({});
-
-  useEffect(() => {
-    setValues(createInitialValues(product));
-    setErrors({});
-  }, [product]);
 
   const handleChange = (field: keyof IProductFormValues, value: string) => {
     setValues((previous) => ({
@@ -165,7 +160,7 @@ export const ProductForm = ({
   }, [values]);
 
   const isSubmitDisabled =
-    loading || !isFormValid || (Boolean(product) && !isModified);
+    Boolean(loading) || !isFormValid || (Boolean(product) && !isModified);
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -349,4 +344,10 @@ export const ProductForm = ({
       </Stack>
     </Box>
   );
+};
+
+export const ProductForm = (props: IProductFormProps) => {
+  const productKey = props.product?.id ?? "create";
+
+  return <ProductFormFields key={productKey} {...props} />;
 };
