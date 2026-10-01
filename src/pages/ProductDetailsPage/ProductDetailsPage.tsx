@@ -39,7 +39,12 @@ export const ProductDetailsPage = () => {
 
   const { effectiveProduct, loading, error } = useProductDetails(id);
 
-  const { categories, loading: categoriesLoading } = useCategories();
+  const {
+    categories,
+    loading: categoriesLoading,
+    error: categoriesError,
+    retry: retryCategories,
+  } = useCategories();
 
   const { saving, deleting, handleEdit, handleDelete } =
     useProductActions(effectiveProduct);
@@ -190,6 +195,8 @@ export const ProductDetailsPage = () => {
             product={effectiveProduct}
             categories={categories}
             loading={saving || categoriesLoading}
+            categoriesError={categoriesError}
+            onRetryCategories={retryCategories}
             onSubmit={handleEdit}
           />
         </Paper>

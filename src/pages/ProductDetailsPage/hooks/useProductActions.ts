@@ -68,10 +68,9 @@ export const useProductActions = (product: IProduct | null) => {
       brand: values.brand.trim(),
     };
 
-    if (values.imageUrl.trim()) {
-      changes.thumbnail = values.imageUrl.trim();
-      changes.images = [values.imageUrl.trim()];
-    }
+    const imageUrl = values.imageUrl.trim();
+    changes.thumbnail = imageUrl;
+    changes.images = imageUrl ? [imageUrl] : [];
 
     try {
       setSaving(true);

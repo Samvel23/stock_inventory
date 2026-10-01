@@ -32,9 +32,7 @@ export const ProductPagination = ({
       rowsPerPageOptions={[5, 10, 20, 30]}
       labelRowsPerPage={t("pagination.rowsPerPage")}
       labelDisplayedRows={({ from, to, count }) =>
-        `${from}-${to} ${t("products.item", {
-          count,
-        })}`
+        t("pagination.displayedRows", { from, to, count })
       }
     />
   );

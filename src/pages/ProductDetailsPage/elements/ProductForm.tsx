@@ -28,6 +28,8 @@ export interface IProductFormValues {
 
 interface IProductFormProps {
   loading?: boolean;
+  categoriesError?: boolean;
+  onRetryCategories?: () => void;
   product?: IProduct;
   categories: ICategory[];
   onSubmit: (values: IProductFormValues) => void;
@@ -47,6 +49,8 @@ const ProductFormFields = ({
   product,
   categories,
   loading,
+  categoriesError,
+  onRetryCategories,
   onSubmit,
 }: IProductFormProps) => {
   const { t } = useTranslation();
@@ -258,7 +262,23 @@ const ProductFormFields = ({
             value={values.category}
             onChange={(event) => handleChange("category", event.target.value)}
             error={Boolean(errors.category)}
-            helperText={errors.category ?? t("productForm.chooseCategory")}
+            helperText={
+              errors.category ??
+              (categoriesError ? (
+                <>
+                  {t("productForm.categoriesLoadFailed")}{" "}
+                  <Button
+                    type="button"
+                    size="small"
+                    onClick={onRetryCategories}
+                  >
+                    {t("actions.retry")}
+                  </Button>
+                </>
+              ) : (
+                t("productForm.chooseCategory")
+              ))
+            }
             aria-invalid={Boolean(errors.category)}
           >
             {categories.map((category) => (

@@ -96,6 +96,7 @@ export interface ITranslationResource {
       loading: string;
       error: string;
       noProducts: string;
+      noProductsDescription: string;
     };
 
     productInfo: {
@@ -175,6 +176,7 @@ export interface ITranslationResource {
       imageUrlHelp: string;
       imageUrlPlaceholder: string;
       imageUrlInvalid: string;
+      categoriesLoadFailed: string;
 
       titleRequired: string;
       descriptionRequired: string;

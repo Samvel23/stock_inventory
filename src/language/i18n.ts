@@ -13,14 +13,18 @@ import { fr } from "./locales/fr";
 const LANGUAGE_STORAGE_KEY = "inventory-language";
 
 const getStoredLanguage = (): TLanguage => {
-  const storedLanguage = localStorage.getItem(LANGUAGE_STORAGE_KEY);
+  try {
+    const storedLanguage = localStorage.getItem(LANGUAGE_STORAGE_KEY);
 
-  if (
-    storedLanguage === "en" ||
-    storedLanguage === "fr" ||
-    storedLanguage === "de"
-  ) {
-    return storedLanguage;
+    if (
+      storedLanguage === "en" ||
+      storedLanguage === "fr" ||
+      storedLanguage === "de"
+    ) {
+      return storedLanguage;
+    }
+  } catch {
+    return "en";
   }
 
   return "en";
@@ -65,7 +69,11 @@ void i18n.use(initReactI18next).init({
 updateHtmlLanguage(initialLanguage);
 
 export const changeLanguage = async (language: TLanguage) => {
-  localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
+  try {
+    localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
+  } catch {
+    // Language changes should work even when browser storage is unavailable.
+  }
 
   await i18n.changeLanguage(language);
 

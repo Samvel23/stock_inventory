@@ -109,6 +109,7 @@ export const en: ITranslationResource = {
       loading: "Loading products...",
       error: "Failed to load products.",
       noProducts: "No products found.",
+      noProductsDescription: "There are no products matching your current filters.",
     },
 
     productSearch: {
@@ -175,6 +176,7 @@ export const en: ITranslationResource = {
       imageUrlHelp: "Use a direct URL to an image",
       imageUrlPlaceholder: "https://example.com/product.jpg",
       imageUrlInvalid: "Enter a valid HTTP or HTTPS image URL",
+      categoriesLoadFailed: "Categories could not be loaded.",
 
       titleRequired: "Title is required",
       descriptionRequired: "Description is required",

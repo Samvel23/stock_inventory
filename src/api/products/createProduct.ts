@@ -8,6 +8,8 @@ interface ICreateProductData {
   price: number;
   stock: number;
   brand?: string;
+  thumbnail: string;
+  images: string[];
 }
 
 export const createProduct = (data: ICreateProductData) =>

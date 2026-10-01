@@ -99,7 +99,7 @@ export const LoginForm = ({ onSubmit }: ILoginFormProps) => {
     try {
       setIsSubmitting(true);
 
-      const res = await loginAuth(values.name, values.password);
+      const res = await loginAuth(values.name.trim(), values.password);
 
       const { accessToken, refreshToken, ...user } = res.data;
 

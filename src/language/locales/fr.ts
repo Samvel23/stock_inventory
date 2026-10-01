@@ -111,6 +111,7 @@ export const fr: ITranslationResource = {
       loading: "Chargement des produits...",
       error: "Impossible de charger les produits.",
       noProducts: "Aucun produit trouvé.",
+      noProductsDescription: "Aucun produit ne correspond aux filtres actuels.",
     },
 
     productSearch: {
@@ -177,6 +178,7 @@ export const fr: ITranslationResource = {
       imageUrlHelp: "Utilisez une URL directe vers une image",
       imageUrlPlaceholder: "https://example.com/product.jpg",
       imageUrlInvalid: "Saisissez une URL d'image HTTP ou HTTPS valide",
+      categoriesLoadFailed: "Impossible de charger les catégories.",
 
       titleRequired: "Le titre est obligatoire",
       descriptionRequired: "La description est obligatoire",

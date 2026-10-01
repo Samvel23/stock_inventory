@@ -32,16 +32,17 @@ import type { IProduct } from "@/types/products";
 
 import styles from "./ProductCreatePage.module.scss";
 
-const createRandomRating = () => {
-  return Number((1 + Math.random() * 4).toFixed(1));
-};
-
 export const CreateProductPage = () => {
   const navigate = useNavigate();
 
   const { t } = useTranslation();
 
-  const { categories, loading: categoriesLoading } = useCategories();
+  const {
+    categories,
+    loading: categoriesLoading,
+    error: categoriesError,
+    retry: retryCategories,
+  } = useCategories();
 
   const addCreatedProduct = useProductChangesStore(
     (state) => state.addCreatedProduct,
@@ -52,6 +53,8 @@ export const CreateProductPage = () => {
   const [loading, setLoading] = useState(false);
 
   const handleCreate = async (values: IProductFormValues) => {
+    const imageUrl = values.imageUrl.trim();
+
     try {
       setLoading(true);
 
@@ -62,9 +65,9 @@ export const CreateProductPage = () => {
         price: Number(values.price),
         stock: Number(values.stock),
         brand: values.brand.trim() || undefined,
+        thumbnail: imageUrl,
+        images: imageUrl ? [imageUrl] : [],
       });
-
-      const imageUrl = values.imageUrl.trim();
 
       const createdProduct: IProduct = {
         ...response.data,
@@ -79,7 +82,7 @@ export const CreateProductPage = () => {
 
         discountPercentage: response.data.discountPercentage ?? 0,
 
-        rating: createRandomRating(),
+        rating: response.data.rating ?? 0,
 
         thumbnail: imageUrl,
         images: [imageUrl],
@@ -138,6 +141,8 @@ export const CreateProductPage = () => {
           <ProductForm
             categories={categories}
             loading={loading || categoriesLoading}
+            categoriesError={categoriesError}
+            onRetryCategories={retryCategories}
             onSubmit={handleCreate}
           />
 

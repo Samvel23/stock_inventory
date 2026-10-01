@@ -6,7 +6,14 @@ interface IUpdateProductParams {
   data: Partial<
     Pick<
       IProduct,
-      "title" | "description" | "category" | "price" | "stock" | "brand"
+      | "title"
+      | "description"
+      | "category"
+      | "price"
+      | "stock"
+      | "brand"
+      | "thumbnail"
+      | "images"
     >
   >;
   signal?: AbortSignal;

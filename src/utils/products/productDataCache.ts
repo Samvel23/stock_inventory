@@ -1,6 +1,13 @@
 import type { ICategory, IProductsResponse } from "@/types/products";
 
-const productsCache = new Map<string, IProductsResponse>();
+interface IProductsCacheEntry {
+  response: IProductsResponse;
+  expiresAt: number;
+}
+
+const MAX_PRODUCT_CACHE_ENTRIES = 100;
+const PRODUCT_CACHE_TTL_MS = 60_000;
+const productsCache = new Map<string, IProductsCacheEntry>();
 let productsCacheVersion = 0;
 
 let categoriesCache: ICategory[] | null = null;
@@ -34,7 +41,23 @@ export const getProductsCacheKey = ({
     userId,
   });
 
-export const getCachedProducts = (key: string) => productsCache.get(key);
+export const getCachedProducts = (key: string) => {
+  const entry = productsCache.get(key);
+
+  if (!entry) {
+    return undefined;
+  }
+
+  if (entry.expiresAt <= Date.now()) {
+    productsCache.delete(key);
+    return undefined;
+  }
+
+  productsCache.delete(key);
+  productsCache.set(key, entry);
+
+  return entry.response;
+};
 
 export const setCachedProducts = (
   key: string,
@@ -42,7 +65,21 @@ export const setCachedProducts = (
   version = productsCacheVersion,
 ) => {
   if (version === productsCacheVersion) {
-    productsCache.set(key, response);
+    productsCache.delete(key);
+    productsCache.set(key, {
+      response,
+      expiresAt: Date.now() + PRODUCT_CACHE_TTL_MS,
+    });
+
+    while (productsCache.size > MAX_PRODUCT_CACHE_ENTRIES) {
+      const oldestKey = productsCache.keys().next().value;
+
+      if (oldestKey === undefined) {
+        break;
+      }
+
+      productsCache.delete(oldestKey);
+    }
   }
 };
 

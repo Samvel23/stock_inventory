@@ -19,5 +19,6 @@ export const refreshAuth = (refreshToken: string) => {
   return axios.post<IRefreshAuthResponse>(
     `${import.meta.env.VITE_API_BASE_URL}/auth/refresh`,
     payload,
+    { timeout: 20_000 },
   );
 };

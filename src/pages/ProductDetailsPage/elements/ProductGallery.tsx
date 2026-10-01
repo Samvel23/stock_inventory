@@ -12,8 +12,15 @@ interface ProductGalleryProps {
 }
 
 const ProductGalleryContent = ({ product }: ProductGalleryProps) => {
-  const images =
-    product.images.length > 0 ? product.images : [product.thumbnail];
+  const productImages = Array.isArray(product.images)
+    ? product.images.filter(
+        (image): image is string =>
+          typeof image === "string" && Boolean(image.trim()),
+      )
+    : [];
+  const thumbnail =
+    typeof product.thumbnail === "string" ? product.thumbnail : "";
+  const images = productImages.length > 0 ? productImages : [thumbnail];
 
   const [selectedImage, setSelectedImage] = useState(images[0]);
   const activeImage = images.includes(selectedImage)

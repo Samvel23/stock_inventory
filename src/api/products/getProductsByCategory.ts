@@ -19,13 +19,16 @@ export const getProductsByCategory = ({
   order,
   signal,
 }: IGetProductsByCategoryParams) => {
-  return apiClient.get<IProductsResponse>(`/products/category/${category}`, {
-    params: {
-      limit,
-      skip,
-      ...(sortBy && { sortBy }),
-      ...(order && { order }),
+  return apiClient.get<IProductsResponse>(
+    `/products/category/${encodeURIComponent(category)}`,
+    {
+      params: {
+        limit,
+        skip,
+        ...(sortBy && { sortBy }),
+        ...(order && { order }),
+      },
+      signal,
     },
-    signal,
-  });
+  );
 };

@@ -1,3 +1,4 @@
+import axios from "axios";
 import type {
   AxiosError,
   AxiosResponse,
@@ -18,15 +19,18 @@ interface IRefreshCredentials {
   refreshToken: string;
 }
 
-let refreshPromise: Promise<IRefreshCredentials> | null = null;
+let refreshPromise: {
+  refreshToken: string;
+  promise: Promise<IRefreshCredentials>;
+} | null = null;
 
 let isRedirectingToLogin = false;
 
 const refreshAccessToken = async (
   refreshToken: string,
 ): Promise<IRefreshCredentials> => {
-  if (!refreshPromise) {
-    refreshPromise = refreshAuth(refreshToken)
+  if (!refreshPromise || refreshPromise.refreshToken !== refreshToken) {
+    const promise = refreshAuth(refreshToken)
       .then((response) => {
         const { accessToken, refreshToken: newRefreshToken } = response.data;
 
@@ -49,14 +53,27 @@ const refreshAccessToken = async (
         return credentials;
       })
       .finally(() => {
-        refreshPromise = null;
+        if (refreshPromise?.promise === promise) {
+          refreshPromise = null;
+        }
       });
+
+    refreshPromise = { refreshToken, promise };
   }
 
-  return refreshPromise;
+  return refreshPromise.promise;
 };
 
-const handleRefreshFailure = () => {
+const handleRefreshFailure = (expectedRefreshToken?: string) => {
+  const currentRefreshToken = useUserStore.getState().credentials?.refreshToken;
+
+  if (
+    expectedRefreshToken !== undefined &&
+    currentRefreshToken !== expectedRefreshToken
+  ) {
+    return;
+  }
+
   useUserStore.getState().removeCredentials();
 
   if (!isRedirectingToLogin) {
@@ -80,6 +97,15 @@ export const responseErrorInterceptor = async (error: AxiosError) => {
     return Promise.reject(error);
   }
 
+  if (
+    originalRequest.url
+      ?.split("?")[0]
+      .replace(/\/+$/, "")
+      .endsWith("/auth/login")
+  ) {
+    return Promise.reject(error);
+  }
+
   originalRequest._retry = true;
 
   const refreshToken = useUserStore.getState().credentials?.refreshToken;
@@ -91,17 +117,25 @@ export const responseErrorInterceptor = async (error: AxiosError) => {
   }
 
   try {
-    await refreshAccessToken(refreshToken);
+    const refreshedCredentials = await refreshAccessToken(refreshToken);
 
     const currentCredentials = useUserStore.getState().credentials;
 
-    if (!currentCredentials) {
+    if (
+      !currentCredentials ||
+      currentCredentials.refreshToken !== refreshedCredentials.refreshToken
+    ) {
       return Promise.reject(error);
     }
 
     return apiClient(originalRequest);
   } catch (refreshError) {
-    handleRefreshFailure();
+    if (
+      axios.isAxiosError(refreshError) &&
+      [400, 401, 403].includes(refreshError.response?.status ?? 0)
+    ) {
+      handleRefreshFailure(refreshToken);
+    }
 
     return Promise.reject(refreshError);
   }

@@ -13,6 +13,7 @@ import {
 } from "@/utils/products/productDataCache";
 
 export const useCategories = () => {
+  const [retryCount, setRetryCount] = useState(0);
   const [categories, setCategories] = useState<ICategory[]>(
     () => getCachedCategories() ?? [],
   );
@@ -66,11 +67,18 @@ export const useCategories = () => {
     return () => {
       active = false;
     };
-  }, []);
+  }, [retryCount]);
+
+  const retry = () => {
+    setError(false);
+    setLoading(true);
+    setRetryCount((current) => current + 1);
+  };
 
   return {
     categories,
     loading,
     error,
+    retry,
   };
 };

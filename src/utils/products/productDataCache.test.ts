@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { IProductsResponse } from "@/types/products";
 
@@ -23,6 +23,7 @@ const emptyResponse: IProductsResponse = {
 
 describe("product data cache", () => {
   beforeEach(() => clearProductDataCaches());
+  afterEach(() => vi.useRealTimers());
 
   it("scopes list responses by account", () => {
     const sharedParams = {
@@ -46,6 +47,21 @@ describe("product data cache", () => {
     setCachedProducts("page", emptyResponse, version);
 
     expect(getCachedProducts("page")).toBeUndefined();
+  });
+
+  it("expires entries and bounds the cache to the most recent 100 queries", () => {
+    vi.useFakeTimers();
+
+    setCachedProducts("expired", emptyResponse);
+    vi.advanceTimersByTime(60_000);
+    expect(getCachedProducts("expired")).toBeUndefined();
+
+    for (let index = 0; index <= 100; index += 1) {
+      setCachedProducts(`page-${index}`, emptyResponse);
+    }
+
+    expect(getCachedProducts("page-0")).toBeUndefined();
+    expect(getCachedProducts("page-100")).toEqual(emptyResponse);
   });
 
   it("clears category data along with product data", () => {

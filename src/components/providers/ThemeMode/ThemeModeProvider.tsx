@@ -20,14 +20,18 @@ interface IThemeModeProviderProps {
 const THEME_MODE_KEY = "theme-mode";
 
 const getInitialMode = (): TThemeMode => {
-  const savedMode = localStorage.getItem(THEME_MODE_KEY);
+  try {
+    const savedMode = localStorage.getItem(THEME_MODE_KEY);
 
-  if (
-    savedMode === themeModes.light ||
-    savedMode === themeModes.dark ||
-    savedMode === themeModes.system
-  ) {
-    return savedMode;
+    if (
+      savedMode === themeModes.light ||
+      savedMode === themeModes.dark ||
+      savedMode === themeModes.system
+    ) {
+      return savedMode;
+    }
+  } catch {
+    return themeModes.system;
   }
 
   return themeModes.system;
@@ -64,8 +68,13 @@ export const ThemeModeProvider = ({ children }: IThemeModeProviderProps) => {
   }, [resolvedMode]);
 
   const changeMode = useCallback((nextMode: TThemeMode) => {
-    localStorage.setItem(THEME_MODE_KEY, nextMode);
     setMode(nextMode);
+
+    try {
+      localStorage.setItem(THEME_MODE_KEY, nextMode);
+    } catch {
+      // Theme changes should work even when browser storage is unavailable.
+    }
   }, []);
 
   const value = useMemo(

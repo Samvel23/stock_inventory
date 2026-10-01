@@ -36,4 +36,18 @@ describe("ProductGallery", () => {
       screen.getByRole("img", { name: "Test product" }).getAttribute("src"),
     ).toBe("https://example.com/updated.jpg");
   });
+
+  it("falls back safely when an API product has no image array", () => {
+    const incompleteProduct = {
+      ...product,
+      thumbnail: "",
+      images: undefined as unknown as string[],
+    };
+
+    render(<ProductGallery product={incompleteProduct} />);
+
+    expect(
+      screen.getByRole("img", { name: "Test product" }).getAttribute("src"),
+    ).toContain("product-placeholder.svg");
+  });
 });
