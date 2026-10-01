@@ -1,11 +1,25 @@
 import { useSearchParams } from "react-router-dom";
 import type { SelectChangeEvent } from "@mui/material";
 
+const validPageSizes = new Set([5, 10, 20, 30]);
+
+export const parsePageParam = (value: string | null) => {
+  const page = Number(value ?? 0);
+
+  return Number.isSafeInteger(page) && page >= 0 ? page : 0;
+};
+
+export const parseLimitParam = (value: string | null) => {
+  const limit = Number(value ?? 10);
+
+  return validPageSizes.has(limit) ? limit : 10;
+};
+
 export const useProductParams = () => {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const page = Number(searchParams.get("page") ?? 0);
-  const limit = Number(searchParams.get("limit") ?? 10);
+  const page = parsePageParam(searchParams.get("page"));
+  const limit = parseLimitParam(searchParams.get("limit"));
 
   const sortBy = searchParams.get("sortBy") ?? "";
 

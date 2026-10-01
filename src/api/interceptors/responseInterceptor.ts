@@ -4,7 +4,7 @@ import type {
   InternalAxiosRequestConfig,
 } from "axios";
 
-import { apiClient } from "@/api/client";
+import { apiClient } from "@/api/client/apiClient";
 import { refreshAuth } from "../auth/refreshAuth";
 import { useUserStore } from "@/stores/useUserStore";
 import { redirectToLogin } from "@/utils/auth/redirectToLogin";

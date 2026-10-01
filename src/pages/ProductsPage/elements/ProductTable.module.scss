@@ -92,6 +92,23 @@
   font-weight: 500 !important;
 }
 
+.stockValue {
+  display: inline-block;
+  min-width: 48px;
+  font-size: 1.125rem !important;
+  font-weight: 700 !important;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.stockAvailable {
+  color: var(--mui-palette-success-main);
+}
+
+.stockUnavailable {
+  color: var(--mui-palette-error-main);
+}
+
 @media (max-width: 800px) {
   .table {
     min-width: 700px;
@@ -99,6 +116,10 @@
 
   .productTitle {
     max-width: 200px;
+  }
+
+  .stockValue {
+    font-size: 1.25rem !important;
   }
 }
 

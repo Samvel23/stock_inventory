@@ -174,6 +174,7 @@ export interface ITranslationResource {
       chooseCategory: string;
       imageUrlHelp: string;
       imageUrlPlaceholder: string;
+      imageUrlInvalid: string;
 
       titleRequired: string;
       descriptionRequired: string;

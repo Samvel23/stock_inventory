@@ -1,27 +1,29 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { Box, Button, Paper, TableContainer, Typography } from "@mui/material";
 
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import { useTranslation } from "react-i18next";
 
 import { isLocalProductId } from "@/utils/products/isLocalProductId";
 
 import {
-  getCategories,
   getProducts,
   getProductsByCategory,
   searchProducts,
 } from "@/api/products";
 
-import type { ICategory, IProduct } from "@/types/products";
+import type { IProduct } from "@/types/products";
 
 import { useDebounce } from "@/hooks/useDebounce";
+import { useCategories } from "@/hooks/useCategories";
 
 import { useProductChangesStore } from "@/stores/useProductChangesStore";
+import { useUserStore } from "@/stores/useUserStore";
 
 import { getEffectiveProducts } from "@/utils/products/getEffectiveProducts";
+import { matchesProductSearch } from "@/utils/products/matchesProductSearch";
 
 import {
   ProductCategoryFilter,
@@ -35,6 +37,7 @@ import { useProductParams } from "./hooks";
 import {
   getCachedProducts,
   getProductsCacheKey,
+  getProductsCacheVersion,
   setCachedProducts,
 } from "./hooks/productsCache";
 
@@ -59,17 +62,23 @@ export const ProductsPage = () => {
   } = useProductParams();
 
   const navigate = useNavigate();
+  const location = useLocation();
+  const { categories } = useCategories();
+  const userId = useUserStore((state) => state.user?.id ?? null);
 
   const [products, setProducts] = useState<IProduct[]>([]);
   const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
-  const [categories, setCategories] = useState<ICategory[]>([]);
-  const [searchInput, setSearchInput] = useState(search);
+  const [searchDraft, setSearchDraft] = useState(() => ({
+    value: search,
+    locationKey: location.key,
+  }));
+  const searchInput =
+    searchDraft.locationKey === location.key ? searchDraft.value : search;
 
   const debouncedSearch = useDebounce(searchInput, 500);
-  const previousSearch = useRef(search);
 
   const createdProducts = useProductChangesStore(
     (state) => state.createdProducts,
@@ -88,25 +97,40 @@ export const ProductsPage = () => {
   };
 
   useEffect(() => {
-    if (debouncedSearch === previousSearch.current) {
+    if (
+      searchDraft.locationKey !== location.key ||
+      debouncedSearch !== searchInput
+    ) {
       return;
     }
 
-    previousSearch.current = debouncedSearch;
+    const normalizedSearch = debouncedSearch.trim().replace(/\s+/g, " ");
+
+    if (normalizedSearch === search) {
+      return;
+    }
 
     const params = new URLSearchParams(searchParams);
 
     params.set("page", "0");
 
-    if (debouncedSearch.trim()) {
-      params.set("search", debouncedSearch.trim());
+    if (normalizedSearch) {
+      params.set("search", normalizedSearch);
       params.delete("category");
     } else {
       params.delete("search");
     }
 
     setSearchParams(params);
-  }, [debouncedSearch, searchParams, setSearchParams]);
+  }, [
+    debouncedSearch,
+    location.key,
+    search,
+    searchDraft.locationKey,
+    searchInput,
+    searchParams,
+    setSearchParams,
+  ]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -119,8 +143,10 @@ export const ProductsPage = () => {
       order,
       category,
       search,
+      userId,
     });
 
+    const cacheVersion = getProductsCacheVersion();
     const cachedResponse = getCachedProducts(cacheKey);
 
     const fetchProducts = async () => {
@@ -178,7 +204,7 @@ export const ProductsPage = () => {
           return;
         }
 
-        setCachedProducts(cacheKey, response.data);
+        setCachedProducts(cacheKey, response.data, cacheVersion);
         setProducts(response.data.products);
         setTotal(response.data.total);
       } catch (error) {
@@ -206,21 +232,7 @@ export const ProductsPage = () => {
       isCurrent = false;
       controller.abort();
     };
-  }, [page, limit, sortBy, order, category, search, retryCount]);
-
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await getCategories();
-
-        setCategories(response.data);
-      } catch (error) {
-        console.error("Fetching categories failed", error);
-      }
-    };
-
-    fetchCategories();
-  }, []);
+  }, [page, limit, sortBy, order, category, search, retryCount, userId]);
 
   const effectiveProducts = useMemo(() => {
     return getEffectiveProducts({
@@ -232,42 +244,14 @@ export const ProductsPage = () => {
   }, [products, createdProducts, deletedProducts, productChanges]);
 
   const visibleApiProducts = useMemo(() => {
-    const normalizedSearch = search.trim().toLowerCase();
-
     return effectiveProducts.filter((product) => {
-      if (
-        createdProducts.some(
-          (createdProduct) => createdProduct.id === product.id,
-        )
-      ) {
-        return false;
-      }
-
-      if (category && product.category !== category) {
-        return false;
-      }
-
-      if (normalizedSearch) {
-        const matchesTitle = product.title
-          .toLowerCase()
-          .includes(normalizedSearch);
-
-        const matchesDescription = product.description
-          .toLowerCase()
-          .includes(normalizedSearch);
-
-        if (!matchesTitle && !matchesDescription) {
-          return false;
-        }
-      }
-
-      return true;
+      return !createdProducts.some(
+        (createdProduct) => createdProduct.id === product.id,
+      );
     });
-  }, [effectiveProducts, createdProducts, category, search]);
+  }, [effectiveProducts, createdProducts]);
 
   const visibleCreatedProducts = useMemo(() => {
-    const normalizedSearch = search.trim().toLowerCase();
-
     return createdProducts.filter((product) => {
       const isDeleted = deletedProducts.some(
         (deletedProduct) => deletedProduct.id === product.id,
@@ -281,18 +265,8 @@ export const ProductsPage = () => {
         return false;
       }
 
-      if (normalizedSearch) {
-        const matchesTitle = product.title
-          .toLowerCase()
-          .includes(normalizedSearch);
-
-        const matchesDescription = product.description
-          .toLowerCase()
-          .includes(normalizedSearch);
-
-        if (!matchesTitle && !matchesDescription) {
-          return false;
-        }
+      if (!matchesProductSearch(product, search)) {
+        return false;
       }
 
       return true;
@@ -300,8 +274,6 @@ export const ProductsPage = () => {
   }, [createdProducts, deletedProducts, category, search]);
 
   const deletedApiProductsCount = useMemo(() => {
-    const normalizedSearch = search.trim().toLowerCase();
-
     return deletedProducts.filter((product) => {
       /*
        * Locally-created products are part of the local dataset,
@@ -324,18 +296,8 @@ export const ProductsPage = () => {
         return false;
       }
 
-      if (normalizedSearch) {
-        const matchesTitle = product.title
-          .toLowerCase()
-          .includes(normalizedSearch);
-
-        const matchesDescription = product.description
-          .toLowerCase()
-          .includes(normalizedSearch);
-
-        if (!matchesTitle && !matchesDescription) {
-          return false;
-        }
+      if (!matchesProductSearch(product, search)) {
+        return false;
       }
 
       return true;
@@ -380,45 +342,49 @@ export const ProductsPage = () => {
     <Box className={styles.page}>
       <Box className={styles.container}>
         <Box className={styles.header}>
-          <Box>
-            <Typography variant="h4" className={styles.title}>
-              {t("productsPage.title")}
-            </Typography>
+          <Typography variant="h4" className={styles.title}>
+            {t("productsPage.title")}
+          </Typography>
 
-            <Typography
-              variant="body2"
-              color="text.secondary"
-              className={styles.subtitle}
-            >
-              {t("productsPage.subtitle")}
-            </Typography>
-          </Box>
-
-          <Button
-            type="button"
-            variant="contained"
-            onClick={handleCreateProduct}
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            className={styles.subtitle}
           >
-            {t("productsPage.createProduct")}
-          </Button>
+            {t("productsPage.subtitle")}
+          </Typography>
         </Box>
-
         <Box className={styles.searchSection}>
-          <ProductSearch value={searchInput} onChange={setSearchInput} />
+          <ProductSearch
+            value={searchInput}
+            onChange={(value) =>
+              setSearchDraft({ value, locationKey: location.key })
+            }
+          />
         </Box>
-
         <TableContainer
           component={Paper}
           elevation={0}
           className={styles.tableCard}
         >
-          <Box className={styles.categorySection}>
-            <ProductCategoryFilter
-              value={category ?? ""}
-              categories={categories}
-              onChange={handleCategoryChange}
-              disabled={Boolean(search.trim())}
-            />
+          <Box className={styles.toolbar}>
+            {!searchInput.trim() && !search.trim() && (
+              <ProductCategoryFilter
+                value={category ?? ""}
+                categories={categories}
+                onChange={handleCategoryChange}
+              />
+            )}
+
+            <Button
+              type="button"
+              variant="contained"
+              size="small"
+              onClick={handleCreateProduct}
+              className={styles.createButton}
+            >
+              {t("productsPage.createProduct")}
+            </Button>
           </Box>
 
           <ProductTable

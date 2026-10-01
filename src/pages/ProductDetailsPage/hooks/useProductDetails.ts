@@ -49,7 +49,7 @@ export const useProductDetails = (id?: string) => {
 
   const [fetchedState, setFetchedState] = useState<IFetchedProductState>(
     () => ({
-      productId: shouldFetch ? productId : null,
+      productId: null,
       product: null,
       error: false,
     }),

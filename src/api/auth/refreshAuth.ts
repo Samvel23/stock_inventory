@@ -13,7 +13,7 @@ interface IRefreshAuthRequest {
 export const refreshAuth = (refreshToken: string) => {
   const payload: IRefreshAuthRequest = {
     refreshToken,
-    expiresInMins: 1,
+    expiresInMins: 30,
   };
 
   return axios.post<IRefreshAuthResponse>(

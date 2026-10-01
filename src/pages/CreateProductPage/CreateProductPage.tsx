@@ -2,9 +2,18 @@ import { useState } from "react";
 
 import { useNavigate } from "react-router-dom";
 
-import { Box, Button, Paper, Stack, Typography } from "@mui/material";
+import {
+  Box,
+  Breadcrumbs,
+  Button,
+  Link as MuiLink,
+  Paper,
+  Stack,
+  Typography,
+} from "@mui/material";
 
 import { useTranslation } from "react-i18next";
+import { Link as RouterLink } from "react-router-dom";
 
 import { createProduct } from "@/api/products/createProduct";
 
@@ -55,8 +64,7 @@ export const CreateProductPage = () => {
         brand: values.brand.trim() || undefined,
       });
 
-      const imageUrl =
-        values.imageUrl.trim() || "https://placehold.co/600x400?text=Product";
+      const imageUrl = values.imageUrl.trim();
 
       const createdProduct: IProduct = {
         ...response.data,
@@ -102,11 +110,21 @@ export const CreateProductPage = () => {
   return (
     <Box className={styles.page}>
       <Stack className={styles.container}>
-        <Box className={styles.header}>
-          <Button type="button" variant="text" onClick={handleCancel}>
-            ← {t("productDetails.back")}
-          </Button>
+        <Breadcrumbs aria-label={t("productDetails.back")}>
+          <MuiLink
+            component={RouterLink}
+            to="/products"
+            underline="hover"
+            color="inherit"
+          >
+            {t("productDetails.back")}
+          </MuiLink>
+          <Typography color="text.primary">
+            {t("productForm.createTitle")}
+          </Typography>
+        </Breadcrumbs>
 
+        <Box className={styles.header}>
           <Typography variant="h4" className={styles.title}>
             {t("productForm.createTitle")}
           </Typography>

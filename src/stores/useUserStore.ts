@@ -1,6 +1,7 @@
 import { create, type StateCreator } from "zustand";
 import { persist } from "zustand/middleware";
 
+import { clearProductDataCaches } from "@/utils/products/productDataCache";
 import { useProductChangesStore } from "./useProductChangesStore";
 
 interface IUser {
@@ -30,18 +31,26 @@ interface IUserState {
 
 type IPersistedUserState = Pick<IUserState, "user" | "credentials">;
 
-const userStoreSlice: StateCreator<IUserState> = (set) => ({
+const userStoreSlice: StateCreator<IUserState> = (set, get) => ({
   user: null,
   credentials: null,
   isInitializing: true,
 
-  setUser: (user) => set({ user }),
+  setUser: (user) => {
+    if (get().user?.id !== user.id) {
+      clearProductDataCaches();
+      useProductChangesStore.getState().clearProductChanges();
+    }
+
+    set({ user });
+  },
 
   setCredentials: (credentials) => set({ credentials }),
 
   setInitializing: (value) => set({ isInitializing: value }),
 
   removeCredentials: () => {
+    clearProductDataCaches();
     useProductChangesStore.getState().clearProductChanges();
 
     set({

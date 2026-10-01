@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import { Box, Stack } from "@mui/material";
 
+import { ProductImage } from "@/components/atoms/ProductImage";
 import type { IProduct } from "@/types/products";
 
 import styles from "./ProductGallery.module.scss";
@@ -15,13 +16,15 @@ const ProductGalleryContent = ({ product }: ProductGalleryProps) => {
     product.images.length > 0 ? product.images : [product.thumbnail];
 
   const [selectedImage, setSelectedImage] = useState(images[0]);
+  const activeImage = images.includes(selectedImage)
+    ? selectedImage
+    : images[0];
 
   return (
     <Box className={styles.gallery}>
       <Box className={styles.mainImageWrapper}>
-        <Box
-          component="img"
-          src={selectedImage}
+        <ProductImage
+          src={activeImage}
           alt={product.title}
           className={styles.mainImage}
         />
@@ -29,7 +32,7 @@ const ProductGalleryContent = ({ product }: ProductGalleryProps) => {
 
       <Stack className={styles.thumbnails}>
         {images.map((image, index) => {
-          const isSelected = selectedImage === image;
+          const isSelected = activeImage === image;
 
           return (
             <Box
@@ -41,8 +44,7 @@ const ProductGalleryContent = ({ product }: ProductGalleryProps) => {
                 isSelected ? styles.thumbnailSelected : ""
               }`}
             >
-              <Box
-                component="img"
+              <ProductImage
                 src={image}
                 alt={`${product.title} ${index + 1}`}
                 className={styles.thumbnailImage}

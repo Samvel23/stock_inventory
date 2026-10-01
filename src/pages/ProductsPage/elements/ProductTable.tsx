@@ -1,30 +1,34 @@
-import { useMemo } from "react";
- 
+import { useEffect, useRef, useState } from "react";
+
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 
 import {
   Box,
   Chip,
   Table,
-  TableBody,
-  TableCell,
-  TableHead,
+  Tooltip,
   TableRow,
-  TableSortLabel,
+  TableBody,
+  TableHead,
+  TableCell,
   Typography,
+  TableSortLabel,
 } from "@mui/material";
 
 import { useTranslation } from "react-i18next";
 
+import { ProductImage } from "@/components/atoms/ProductImage";
 import type { IProduct } from "@/types/products";
 
 import { formatCurrency, getCurrentLanguage } from "@/language";
 
 import { useProductChangesStore } from "@/stores/useProductChangesStore";
 
-import { mergeProductChanges } from "@/utils/products/mergeProductChanges";
-
-import { ProductEmptyState, ProductErrorState, ProductSkeleton } from ".";
+import {
+  ProductSkeleton,
+  ProductEmptyState,
+  ProductErrorState,
+} from "../elements";
 
 import styles from "./ProductTable.module.scss";
 
@@ -38,14 +42,61 @@ interface ProductTableProps {
   onRetry: () => void;
 }
 
+interface TruncatedTextProps {
+  children: string;
+  className?: string;
+}
+
+const TruncatedText = ({ children, className }: TruncatedTextProps) => {
+  const textRef = useRef<HTMLSpanElement>(null);
+  const [isTruncated, setIsTruncated] = useState(false);
+
+  useEffect(() => {
+    const element = textRef.current;
+
+    if (!element) {
+      return;
+    }
+
+    const updateTruncation = () => {
+      setIsTruncated(element.scrollWidth > element.clientWidth);
+    };
+
+    updateTruncation();
+
+    const resizeObserver = new ResizeObserver(updateTruncation);
+    resizeObserver.observe(element);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [children]);
+
+  const content = (
+    <span ref={textRef} className={className}>
+      {children}
+    </span>
+  );
+
+  if (!isTruncated) {
+    return content;
+  }
+
+  return (
+    <Tooltip title={children} arrow>
+      {content}
+    </Tooltip>
+  );
+};
+
 export const ProductTable = ({
-  products,
-  loading,
   error,
-  sortBy,
   order,
+  sortBy,
   onSort,
   onRetry,
+  loading,
+  products,
 }: ProductTableProps) => {
   const navigate = useNavigate();
 
@@ -73,18 +124,6 @@ export const ProductTable = ({
     handleProductClick(productId);
   };
 
-  const effectiveProducts = useMemo(() => {
-    return products.map((product) => {
-      const changes = productChanges[product.id];
-
-      if (!changes) {
-        return product;
-      }
-
-      return mergeProductChanges(product, changes);
-    });
-  }, [products, productChanges]);
-
   return (
     <Box className={styles.wrapper}>
       <Table
@@ -92,6 +131,14 @@ export const ProductTable = ({
         size="medium"
         aria-label={t("productTable.label")}
       >
+        <colgroup>
+          <col className={styles.idColumn} />
+          <col className={styles.productColumn} />
+          <col className={styles.categoryColumn} />
+          <col className={styles.priceColumn} />
+          <col className={styles.ratingColumn} />
+          <col className={styles.stockColumn} />
+        </colgroup>
         <TableHead>
           <TableRow className={styles.headerRow}>
             <TableCell className={styles.idCell}>
@@ -133,16 +180,15 @@ export const ProductTable = ({
             </TableCell>
           </TableRow>
         </TableHead>
-
         <TableBody>
           {loading && products.length === 0 ? (
             <ProductSkeleton />
           ) : error ? (
             <ProductErrorState onRetry={onRetry} />
-          ) : effectiveProducts.length === 0 ? (
+          ) : products.length === 0 ? (
             <ProductEmptyState />
           ) : (
-            effectiveProducts.map((product) => {
+            products.map((product) => {
               const isModified = Boolean(productChanges[product.id]);
 
               return (
@@ -159,30 +205,37 @@ export const ProductTable = ({
 
                   <TableCell>
                     <Box className={styles.product}>
-                      <Box
-                        component="img"
+                      <ProductImage
                         src={product.thumbnail}
                         alt=""
                         className={styles.thumbnail}
                       />
 
                       <Box className={styles.productInfo}>
-                        <Typography
-                          component={RouterLink}
-                          to={`/products/${product.id}`}
-                          variant="body2"
-                          className={styles.productTitle}
-                          onClick={(event) => {
-                            event.stopPropagation();
-                          }}
+                        <Tooltip
+                          title={product.title}
+                          arrow
+                          disableHoverListener
                         >
-                          {product.title}
-                        </Typography>
+                          <Typography
+                            component={RouterLink}
+                            to={`/products/${product.id}`}
+                            variant="body2"
+                            className={styles.productTitle}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                            }}
+                          >
+                            <TruncatedText className={styles.truncatedText}>
+                              {product.title}
+                            </TruncatedText>
+                          </Typography>
+                        </Tooltip>
 
                         {product.brand && (
-                          <Typography variant="caption" color="text.secondary">
+                          <TruncatedText className={styles.brand}>
                             {product.brand}
-                          </Typography>
+                          </TruncatedText>
                         )}
 
                         {isModified && (
@@ -198,11 +251,11 @@ export const ProductTable = ({
                   </TableCell>
 
                   <TableCell>
-                    <Chip
-                      label={product.category}
-                      size="small"
-                      variant="outlined"
-                    />
+                    <Box className={styles.category}>
+                      <TruncatedText className={styles.categoryText}>
+                        {product.category}
+                      </TruncatedText>
+                    </Box>
                   </TableCell>
 
                   <TableCell>
@@ -225,12 +278,16 @@ export const ProductTable = ({
                   </TableCell>
 
                   <TableCell>
-                    <Chip
-                      label={product.stock}
-                      size="small"
-                      color={product.stock > 0 ? "success" : "error"}
-                      variant="outlined"
-                    />
+                    <Typography
+                      component="span"
+                      className={`${styles.stockValue} ${
+                        product.stock > 0
+                          ? styles.stockAvailable
+                          : styles.stockUnavailable
+                      }`}
+                    >
+                      {new Intl.NumberFormat(language).format(product.stock)}
+                    </Typography>
                   </TableCell>
                 </TableRow>
               );

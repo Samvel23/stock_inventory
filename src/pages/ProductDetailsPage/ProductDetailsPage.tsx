@@ -1,6 +1,15 @@
-import { Box, Button, Chip, Paper, Stack, Typography } from "@mui/material";
+import {
+  Box,
+  Breadcrumbs,
+  Button,
+  Chip,
+  Link as MuiLink,
+  Paper,
+  Stack,
+  Typography,
+} from "@mui/material";
 
-import { useNavigate, useParams } from "react-router-dom";
+import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
 
 import { useTranslation } from "react-i18next";
 
@@ -47,10 +56,6 @@ export const ProductDetailsPage = () => {
     ? hasLocalChanges(effectiveProduct.id)
     : false;
 
-  const handleBackToProducts = () => {
-    navigate("/products");
-  };
-
   const handleDeleteProduct = async () => {
     const deleted = await handleDelete();
 
@@ -67,14 +72,31 @@ export const ProductDetailsPage = () => {
     discardProductChanges(effectiveProduct.id);
   };
 
+  const breadcrumbs = (
+    <Breadcrumbs aria-label={t("productDetails.back")}>
+      <MuiLink
+        component={RouterLink}
+        to="/products"
+        underline="hover"
+        color="inherit"
+      >
+        {t("productDetails.back")}
+      </MuiLink>
+      <Typography color="text.primary">{t("productDetails.title")}</Typography>
+    </Breadcrumbs>
+  );
+
   if (loading) {
     return (
       <Box className={styles.page}>
-        <Paper elevation={0} className={styles.stateCard}>
-          <Typography color="text.secondary">
-            {t("productDetails.loading")}
-          </Typography>
-        </Paper>
+        <Stack className={styles.container}>
+          {breadcrumbs}
+          <Paper elevation={0} className={styles.stateCard}>
+            <Typography color="text.secondary">
+              {t("productDetails.loading")}
+            </Typography>
+          </Paper>
+        </Stack>
       </Box>
     );
   }
@@ -82,23 +104,18 @@ export const ProductDetailsPage = () => {
   if (error || !effectiveProduct) {
     return (
       <Box className={styles.page}>
-        <Paper elevation={0} className={styles.stateCard}>
-          <Typography variant="h6" className={styles.stateTitle}>
-            {t("productDetails.notFound.title")}
-          </Typography>
+        <Stack className={styles.container}>
+          {breadcrumbs}
+          <Paper elevation={0} className={styles.stateCard}>
+            <Typography variant="h6" className={styles.stateTitle}>
+              {t("productDetails.notFound.title")}
+            </Typography>
 
-          <Typography variant="body2" color="text.secondary">
-            {t("productDetails.notFound.message")}
-          </Typography>
-
-          <Button
-            type="button"
-            variant="contained"
-            onClick={handleBackToProducts}
-          >
-            {t("productDetails.back")}
-          </Button>
-        </Paper>
+            <Typography variant="body2" color="text.secondary">
+              {t("productDetails.notFound.message")}
+            </Typography>
+          </Paper>
+        </Stack>
       </Box>
     );
   }
@@ -106,17 +123,10 @@ export const ProductDetailsPage = () => {
   return (
     <Box className={styles.page}>
       <Stack className={styles.container}>
+        {breadcrumbs}
+
         <Box className={styles.header}>
           <Box>
-            <Button
-              type="button"
-              variant="text"
-              onClick={handleBackToProducts}
-              className={styles.backButton}
-            >
-              ← {t("productDetails.back")}
-            </Button>
-
             <Typography variant="h4" className={styles.title}>
               {t("productDetails.title")}
             </Typography>

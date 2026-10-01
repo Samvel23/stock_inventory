@@ -1,4 +1,5 @@
 import { Box, Chip, Divider, Rating, Stack, Typography } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
 import { formatCurrency, getCurrentLanguage } from "@/language";
@@ -12,6 +13,7 @@ interface ProductInfoProps {
 
 export const ProductInfo = ({ product }: ProductInfoProps) => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
 
   const language = getCurrentLanguage();
 
@@ -34,7 +36,15 @@ export const ProductInfo = ({ product }: ProductInfoProps) => {
       </Box>
 
       <Stack className={styles.chips}>
-        <Chip label={product.category} size="small" />
+        <Chip
+          label={product.category}
+          size="small"
+          onClick={() => {
+            const params = new URLSearchParams({ category: product.category });
+
+            navigate(`/products?${params.toString()}`);
+          }}
+        />
 
         <Chip
           label={

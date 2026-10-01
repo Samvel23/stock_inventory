@@ -2,7 +2,6 @@ import { useState } from "react";
 
 import { useTranslation } from "react-i18next";
 
-import { createProduct } from "@/api/products/createProduct";
 import { deleteProduct } from "@/api/products/deleteProduct";
 import { updateProduct } from "@/api/products/updateProduct";
 
@@ -45,10 +44,6 @@ export const useProductActions = (product: IProduct | null) => {
     (state) => state.discardProductChanges,
   );
 
-  const addCreatedProduct = useProductChangesStore(
-    (state) => state.addCreatedProduct,
-  );
-
   const deleteProductLocally = useProductChangesStore(
     (state) => state.deleteProductLocally,
   );
@@ -56,50 +51,6 @@ export const useProductActions = (product: IProduct | null) => {
   const isLocalProduct = product
     ? createdProducts.some((createdProduct) => createdProduct.id === product.id)
     : false;
-
-  const handleCreate = async (values: IProductFormValues) => {
-    try {
-      setSaving(true);
-
-      const response = await createProduct({
-        title: values.title.trim(),
-        description: values.description.trim(),
-        category: values.category,
-        price: Number(values.price),
-        stock: Number(values.stock),
-        brand: values.brand.trim() || undefined,
-      });
-
-      const imageUrl =
-        values.imageUrl.trim() || "https://placehold.co/600x400?text=Product";
-
-      const createdProduct: IProduct = {
-        ...response.data,
-        title: values.title.trim(),
-        description: values.description.trim(),
-        category: values.category,
-        price: Number(values.price),
-        stock: Number(values.stock),
-        brand: values.brand.trim() || undefined,
-        discountPercentage: response.data.discountPercentage ?? 0,
-        rating: response.data.rating ?? 0,
-        thumbnail: imageUrl,
-        images: [imageUrl],
-      };
-
-      addCreatedProduct(createdProduct);
-
-      showToast(t("productActions.created"), "success");
-    } catch (error) {
-      console.error("Error creating product", error);
-
-      showToast(t("productActions.createFailed"), "error");
-
-      throw error;
-    } finally {
-      setSaving(false);
-    }
-  };
 
   const handleEdit = async (values: IProductFormValues) => {
     if (!product) {
@@ -114,7 +65,7 @@ export const useProductActions = (product: IProduct | null) => {
       category: values.category,
       price: Number(values.price),
       stock: Number(values.stock),
-      brand: values.brand.trim() || undefined,
+      brand: values.brand.trim(),
     };
 
     if (values.imageUrl.trim()) {
@@ -193,7 +144,6 @@ export const useProductActions = (product: IProduct | null) => {
   return {
     saving,
     deleting,
-    handleCreate,
     handleEdit,
     handleDelete,
   };

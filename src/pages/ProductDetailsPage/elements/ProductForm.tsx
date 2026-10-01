@@ -12,6 +12,7 @@ import {
 import { useTranslation } from "react-i18next";
 
 import type { ICategory, IProduct } from "@/types/products";
+import { isValidImageUrl } from "@/utils/validation";
 
 import styles from "./ProductForm.module.scss";
 
@@ -121,6 +122,10 @@ const ProductFormFields = ({
       newErrors.category = t("productForm.categoryRequired");
     }
 
+    if (values.imageUrl.trim() && !isValidImageUrl(values.imageUrl)) {
+      newErrors.imageUrl = t("productForm.imageUrlInvalid");
+    }
+
     const price = Number(values.price);
 
     if (!values.price.trim()) {
@@ -155,7 +160,8 @@ const ProductFormFields = ({
       price > 0 &&
       Boolean(values.stock.trim()) &&
       Number.isInteger(stock) &&
-      stock >= 0
+      stock >= 0 &&
+      (!values.imageUrl.trim() || isValidImageUrl(values.imageUrl))
     );
   }, [values]);
 
@@ -221,6 +227,7 @@ const ProductFormFields = ({
 
         <TextField
           fullWidth
+          required
           label={t("productForm.title")}
           value={values.title}
           onChange={(event) => handleChange("title", event.target.value)}
@@ -231,6 +238,7 @@ const ProductFormFields = ({
 
         <TextField
           fullWidth
+          required
           label={t("productForm.description")}
           multiline
           minRows={4}
@@ -245,6 +253,7 @@ const ProductFormFields = ({
           <TextField
             select
             fullWidth
+            required
             label={t("productForm.category")}
             value={values.category}
             onChange={(event) => handleChange("category", event.target.value)}
@@ -275,6 +284,14 @@ const ProductFormFields = ({
           label={t("productForm.imageUrl")}
           value={values.imageUrl}
           onChange={(event) => handleChange("imageUrl", event.target.value)}
+          onBlur={() => {
+            if (values.imageUrl.trim() && !isValidImageUrl(values.imageUrl)) {
+              setErrors((previous) => ({
+                ...previous,
+                imageUrl: t("productForm.imageUrlInvalid"),
+              }));
+            }
+          }}
           error={Boolean(errors.imageUrl)}
           helperText={errors.imageUrl ?? t("productForm.imageUrlHelp")}
           placeholder={t("productForm.imageUrlPlaceholder")}
@@ -284,6 +301,7 @@ const ProductFormFields = ({
         <Box className={styles.grid}>
           <TextField
             fullWidth
+            required
             label={t("productForm.price")}
             type="number"
             value={values.price}
@@ -301,6 +319,7 @@ const ProductFormFields = ({
 
           <TextField
             fullWidth
+            required
             label={t("productForm.stock")}
             type="number"
             value={values.stock}

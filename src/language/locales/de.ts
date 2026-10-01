@@ -176,6 +176,7 @@ export const de: ITranslationResource = {
       chooseCategory: "Wählen Sie eine Produktkategorie",
       imageUrlHelp: "Verwenden Sie eine direkte URL zu einem Bild",
       imageUrlPlaceholder: "https://example.com/product.jpg",
+      imageUrlInvalid: "Geben Sie eine gültige HTTP- oder HTTPS-Bild-URL ein",
 
       titleRequired: "Titel ist erforderlich",
       descriptionRequired: "Beschreibung ist erforderlich",

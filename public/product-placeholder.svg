@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 480" role="img" aria-label="Product image unavailable">
+  <rect width="640" height="480" fill="#f1f3f4"/>
+  <path d="M229 174h182l25 40v123H204V214l25-40Z" fill="#fff" stroke="#9aa4aa" stroke-width="8" stroke-linejoin="round"/>
+  <path d="M204 214h232M274 174l-15 40m107-40 15 40" fill="none" stroke="#9aa4aa" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M280 269h80" fill="none" stroke="#d34d3f" stroke-width="10" stroke-linecap="round"/>
+</svg>

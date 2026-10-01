@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 import type { IProduct } from "@/types/products";
+import { clearProductsCache } from "@/utils/products/productDataCache";
 
 type ProductChanges = Partial<IProduct>;
 
@@ -45,6 +46,8 @@ export const useProductChangesStore = create<ProductChangesState>()(
       deletedProducts: [],
 
       setProductChanges: (productId, changes) => {
+        clearProductsCache();
+
         set((state) => ({
           productChanges: {
             ...state.productChanges,
@@ -57,6 +60,8 @@ export const useProductChangesStore = create<ProductChangesState>()(
       },
 
       addCreatedProduct: (product) => {
+        clearProductsCache();
+
         set((state) => {
           const usedIds = new Set(state.createdProducts.map((item) => item.id));
 
@@ -78,15 +83,17 @@ export const useProductChangesStore = create<ProductChangesState>()(
       },
 
       deleteProductLocally: (product) => {
+        const alreadyDeleted = get().deletedProducts.some(
+          (deletedProduct) => deletedProduct.id === product.id,
+        );
+
+        if (alreadyDeleted) {
+          return;
+        }
+
+        clearProductsCache();
+
         set((state) => {
-          const alreadyDeleted = state.deletedProducts.some(
-            (deletedProduct) => deletedProduct.id === product.id,
-          );
-
-          if (alreadyDeleted) {
-            return state;
-          }
-
           return {
             deletedProducts: [...state.deletedProducts, product],
           };
@@ -94,6 +101,8 @@ export const useProductChangesStore = create<ProductChangesState>()(
       },
 
       discardProductChanges: (productId) => {
+        clearProductsCache();
+
         set((state) => {
           const remainingChanges = Object.fromEntries(
             Object.entries(state.productChanges).filter(

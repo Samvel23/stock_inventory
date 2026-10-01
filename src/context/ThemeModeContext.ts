@@ -6,7 +6,6 @@ interface IThemeModeContextValue {
   mode: TThemeMode;
   resolvedMode: TResolvedThemeMode;
   changeMode: (mode: TThemeMode) => void;
-  toggleMode: VoidFunction;
 }
 
 export const ThemeModeContext = createContext<

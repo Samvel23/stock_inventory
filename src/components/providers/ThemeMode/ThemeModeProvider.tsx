@@ -68,25 +68,13 @@ export const ThemeModeProvider = ({ children }: IThemeModeProviderProps) => {
     setMode(nextMode);
   }, []);
 
-  const toggleMode = useCallback(() => {
-    setMode((currentMode) => {
-      const nextMode =
-        currentMode === themeModes.dark ? themeModes.light : themeModes.dark;
-
-      localStorage.setItem(THEME_MODE_KEY, nextMode);
-
-      return nextMode;
-    });
-  }, []);
-
   const value = useMemo(
     () => ({
       mode,
       resolvedMode,
       changeMode,
-      toggleMode,
     }),
-    [mode, resolvedMode, changeMode, toggleMode],
+    [mode, resolvedMode, changeMode],
   );
 
   return (

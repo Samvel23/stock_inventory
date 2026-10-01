@@ -111,6 +111,31 @@ export const InventoryValueChart = ({ data }: IInventoryValueChartProps) => {
           })}
         </svg>
       </Box>
+
+      <Box className={styles.mobileBreakdown}>
+        {data.map((item) => {
+          const barWidth = maxValue > 0 ? (item.value / maxValue) * 100 : 0;
+
+          return (
+            <Box className={styles.mobileItem} key={item.category}>
+              <Box className={styles.mobileItemHeader}>
+                <Typography className={styles.mobileCategory}>
+                  {item.category}
+                </Typography>
+                <Typography className={styles.mobileValue}>
+                  {formatCurrency(item.value, language)}
+                </Typography>
+              </Box>
+              <Box className={styles.mobileTrack} aria-hidden="true">
+                <Box
+                  className={styles.mobileBar}
+                  style={{ width: `${barWidth}%` }}
+                />
+              </Box>
+            </Box>
+          );
+        })}
+      </Box>
     </Box>
   );
 };

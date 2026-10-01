@@ -8,6 +8,7 @@ export interface IProduct {
   rating: number;
   stock: number;
   brand?: string;
+  tags?: string[];
   thumbnail: string;
   images: string[];
 }

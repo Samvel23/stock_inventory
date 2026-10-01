@@ -4,38 +4,47 @@ import { getCategories } from "@/api/products";
 
 import type { ICategory } from "@/types/products";
 
-let categoriesCache: ICategory[] | null = null;
-let categoriesPromise: Promise<ICategory[]> | null = null;
+import {
+  getCachedCategories,
+  getCategoriesCacheVersion,
+  getCategoriesPromise,
+  setCachedCategories,
+  setCategoriesPromise,
+} from "@/utils/products/productDataCache";
 
 export const useCategories = () => {
   const [categories, setCategories] = useState<ICategory[]>(
-    () => categoriesCache ?? [],
+    () => getCachedCategories() ?? [],
   );
 
-  const [loading, setLoading] = useState(() => categoriesCache === null);
+  const [loading, setLoading] = useState(() => getCachedCategories() === null);
 
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    if (categoriesCache) {
-      return;
-    }
-
+    const cachedCategories = getCachedCategories();
     let active = true;
+    const cacheVersion = getCategoriesCacheVersion();
+    let request =
+      cachedCategories === null
+        ? getCategoriesPromise()
+        : Promise.resolve(cachedCategories);
 
-    if (!categoriesPromise) {
-      categoriesPromise = getCategories()
+    if (!request) {
+      request = getCategories()
         .then((response) => {
-          categoriesCache = response.data;
+          setCachedCategories(response.data, cacheVersion);
 
           return response.data;
         })
         .finally(() => {
-          categoriesPromise = null;
+          setCategoriesPromise(null, cacheVersion);
         });
+
+      setCategoriesPromise(request, cacheVersion);
     }
 
-    categoriesPromise
+    request
       .then((data) => {
         if (!active) {
           return;
