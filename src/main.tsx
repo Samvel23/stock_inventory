@@ -1,5 +1,5 @@
 import { createRoot } from "react-dom/client";
-import { BrowserRouter } from "react-router-dom";
+import { HashRouter } from "react-router-dom";
 
 import { ThemeModeProvider, ThemeRegistry } from "@/components";
 import App from "./App";
@@ -9,7 +9,7 @@ import "@/styles/globals.scss";
 import { ToastProvider } from "./components/providers/ToastProvider";
 
 createRoot(document.getElementById("root")!).render(
-  <BrowserRouter>
+  <HashRouter>
     <ThemeModeProvider>
       <ThemeRegistry>
         <ToastProvider>
@@ -17,5 +17,5 @@ createRoot(document.getElementById("root")!).render(
         </ToastProvider>
       </ThemeRegistry>
     </ThemeModeProvider>
-  </BrowserRouter>,
+  </HashRouter>,
 );
